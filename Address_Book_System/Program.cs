@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
+using CsvHelper;
+using System.Globalization;
 
-namespace Address_Book_System
+namespace AddressBookSystem
 {
     class AddressBook
     {
@@ -23,6 +25,8 @@ namespace Address_Book_System
                 Person person = new Person(firstName, lastName, city, state, email, phoneNumber, zip);//create new object of person class
                 adressBookList.Add(person);//adding person details in addressbookList 
                 Console.WriteLine("Contact added Successfully");
+                Console.WriteLine();
+                Console.WriteLine("New contact");
             }
             else
             {
@@ -34,7 +38,7 @@ namespace Address_Book_System
             Console.WriteLine("\nEntered Person Details is:");
             foreach (var person in adressBookList)
             {
-                Console.WriteLine("FirstName: {0}, LastName: {1}, city: {2}, state: {3}, email: {4}, phoneNumber: {5}", person.firstName, person.lastName, person.city, person.state, person.email, person.phoneNumber);
+                Console.WriteLine("FirstName: {0}, LastName: {1}, city: {2}, state: {3}, email: {4}, phoneNumber: {5}, Zip:{6}", person.firstName, person.lastName, person.city, person.state, person.email, person.phoneNumber, person.zip);
             }
         }
 
@@ -43,7 +47,7 @@ namespace Address_Book_System
             Console.WriteLine("\nEntered Person Details is in Order :");
             foreach (var person in adressBookList.OrderBy(Key => Key.firstName))//orderBy sorts the vlues of collection in ascending or decending order
             {
-                Console.WriteLine("FirstName: {0}, LastName: {1}, city: {2}, state: {3}, email: {4}, phoneNumber: {5}", person.firstName, person.lastName, person.city, person.state, person.email, person.phoneNumber);
+                Console.WriteLine("FirstName: {0}, LastName: {1}, city: {2}, state: {3}, email: {4}, phoneNumber: {5}, Zip:{6}", person.firstName, person.lastName, person.city, person.state, person.email, person.phoneNumber, person.zip);
             }
         }
         public void displayPersonInOrderByCity()
@@ -117,6 +121,26 @@ namespace Address_Book_System
             }
             Console.WriteLine("This {0} persons are in same state {1} \t {2} ", count2, state, city);
         }
+
+        public void WritePersonDetailTextFile()
+        {
+            FileReadWrite.WriteTxtFile(adressBookList);
+        }
+
+        public void ReadPersonDetailTxtFile()
+        {
+            FileReadWrite.ReadTxtFile();
+        }
+
+        public void WritePersonDetailCsvFile()
+        {
+            FileReadWrite.writeIntoCsvFile(adressBookList);
+        }
+
+        public void ReadPersonDetailCsvFile()
+        {
+            FileReadWrite.ReadContactsInCSVFile();
+        }
         public void editPerson()
         {
             Console.WriteLine("\n enter First name to edit details:");
@@ -174,6 +198,92 @@ namespace Address_Book_System
             Console.WriteLine("Enter lastname of the user you want to remove");
             var lastName = Console.ReadLine();
             adressBookList.RemoveAll(item => item.firstName == firstName && item.lastName == lastName);
+        }
+    }
+    
+    class FileReadWrite
+    {
+        static String FilePath = @"C:\Users\kholi\source\repos\Address_Book_System\Address_Book_System\Address.txt";
+        static string FilePathCsv = @"C:\Users\kholi\source\repos\Address_Book_System\Address_Book_System\Datacsv.csv";
+
+        //  static String FilePathCsv = @"C:\Users\Radha\source\repos\AddressBookSystem\AddressBookSystem\ReadWriteCsv.csv";
+        public static void WriteTxtFile(List<Person> persons)
+        {
+            if (File.Exists(FilePath))
+            {
+                using (StreamWriter streamWriter = File.AppendText(FilePath))
+                {
+                    foreach (Person person in persons)
+                    {
+                        streamWriter.WriteLine(" \nPersons detail ");
+                        streamWriter.WriteLine("FirstName: " + person.firstName);
+                        streamWriter.WriteLine("LastName: " + person.lastName);
+                        streamWriter.WriteLine("City    : " + person.city);
+                        streamWriter.WriteLine("Email   : " + person.email);
+                        streamWriter.WriteLine("State   : " + person.state);
+                        streamWriter.WriteLine("PhoneNum: " + person.phoneNumber);
+
+                    }
+                    streamWriter.Close();
+                }
+                Console.WriteLine("Writting Persons detail in to the Text the file");
+            }
+            else
+            {
+                Console.WriteLine("No such file exists");
+            }
+        }
+
+        public static void ReadTxtFile()
+        {
+            if (File.Exists(FilePath))
+            {
+                using (StreamReader streamReader = File.OpenText(FilePath))
+                {
+                    String personDetails = "";
+                    while ((personDetails = streamReader.ReadLine()) != null)
+                        Console.WriteLine((personDetails));
+                }
+                Console.ReadKey();
+            }
+            else
+            {
+                Console.WriteLine("No such file exists");
+            }
+        }
+
+        public static void writeIntoCsvFile(List<Person> contacts)
+        {
+            if (File.Exists(FilePathCsv))
+            {
+                using (StreamWriter streamWriter = File.AppendText(FilePathCsv))
+                {
+                    foreach (Person contact in contacts)
+                    {
+                        streamWriter.WriteLine(contact.firstName + "," + contact.lastName + "," + contact.city + "," + contact.state + "," + contact.phoneNumber);
+                    }
+                }
+            }
+        }
+
+        public static void ReadContactsInCSVFile()
+        {
+            if (File.Exists(FilePathCsv))
+            {
+                string[] csv = File.ReadAllLines(FilePathCsv);
+                foreach (string csValues in csv)
+                {
+                    string[] column = csValues.Split(',');
+                    foreach (string CSValues in column)
+                    {
+                        Console.WriteLine(CSValues);
+                    }
+                }
+            }
+            else
+            {
+                Console.WriteLine("No such file exists");
+            }
         }
     }
     class Person
@@ -264,6 +374,7 @@ namespace Address_Book_System
             this.zip = zip;
         }
     }
+    
     class Program
     {
         /// <summary>
@@ -272,6 +383,7 @@ namespace Address_Book_System
         /// <param name="args"></param>
         public static void Main(String[] args)
         {
+            FileReadWrite.ReadContactsInCSVFile();
             // AddressBook obj = new AddressBook();//create object of AddressBook class
 
 
@@ -297,7 +409,7 @@ namespace Address_Book_System
             }
             while (Result)
             {
-                Console.WriteLine("\nChoose option \n1.Add Contact \n2.Edit Contact \n3.Delete Contact  \n4.Display Contacts \n5.Search Person By City & State \n6.Display Contacts Same City \n7.Display Contacts Same State \n8.View number of contacts of city and state  \n9.Display Contacts in Sorted \n10.Display contact in sorted by state or by city \n11.Exit");
+                Console.WriteLine("\nChoose option \n1.Add Contact \n2.Edit Contact \n3.Delete Contact  \n4.Display Contacts \n5.Search Person By City & State \n6.Display Contacts Same City \n7.Display Contacts Same State \n8.View number of contacts of city and state  \n9.Display Contacts in Sorted \n10.Display contact in sorted by state or by city \n11.File Operation \n12.Read Write Operation inCsv \n13.Exit");
                 int choice = Convert.ToInt32(Console.ReadLine());
                 switch (choice)
                 {
@@ -422,8 +534,81 @@ namespace Address_Book_System
                                 break;
                         }
                         break;
-
                     case 11:
+                        Console.WriteLine("chioce : \n1.Write Person detail in text file \n2 Read Person detail from text file");
+                        int chooseOption = Convert.ToInt32(Console.ReadLine());
+                        switch (chooseOption)
+                        {
+                            case 1:
+                                Console.WriteLine("Enter Address Book name where you want to write person details");
+                                string write = Console.ReadLine();
+                                if (abDict.ContainsKey(write))
+                                {
+                                    abDict[write].WritePersonDetailTextFile();
+                                }
+                                else
+                                {
+                                    Console.WriteLine("No Address book exist with name {0} ", write);
+                                }
+                                break;
+                            case 2:
+                                Console.WriteLine("Enter Address Book name where you want to write person details");
+                                string read = Console.ReadLine();
+                                if (abDict.ContainsKey(read))
+                                {
+                                    abDict[read].ReadPersonDetailTxtFile();
+                                }
+                                else
+                                {
+                                    Console.WriteLine("No Address book exist with name {0} ", read);
+                                }
+                                break;
+
+                            default:
+                                Console.WriteLine("Please enter valid option only");
+                                break;
+                        }
+                        break;
+
+
+                    case 12:
+                        Console.WriteLine("chioce : \n1.Write Person detail in Csv file \n2 Read Person detail from Csv file");
+                        int chooseOption2 = Convert.ToInt32(Console.ReadLine());
+                        switch (chooseOption2)
+                        {
+                            case 1:
+                                Console.WriteLine("Enter Address Book name where you want to write person details");
+                                string write1 = Console.ReadLine();
+                                if (abDict.ContainsKey(write1))
+                                {
+                                    abDict[write1].WritePersonDetailCsvFile();
+                                }
+                                else
+                                {
+                                    Console.WriteLine("No Address book exist with name {0} ", write1);
+                                }
+                                break;
+                            case 2:
+                                Console.WriteLine("Enter Address Book name where you want to write person details");
+                                string read = Console.ReadLine();
+                                if (abDict.ContainsKey(read))
+                                {
+                                    abDict[read].ReadPersonDetailCsvFile();
+                                }
+                                else
+                                {
+                                    Console.WriteLine("No Address book exist with name {0} ", read);
+                                }
+                                break;
+
+                            default:
+                                Console.WriteLine("Please enter valid option only");
+                                break;
+                        }
+                        break;
+
+
+                    case 13:
                         Result = false;
                         break;
                     default:
@@ -455,3 +640,4 @@ namespace Address_Book_System
         }
     }
 }
+
